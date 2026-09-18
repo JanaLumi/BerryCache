@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Full Web-to-Silicon Berry Journey</title>
+    <style>
+        body {
+            background-color: #121214;
+            color: #e1e1e6;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        h2 { margin: 5px 0; font-weight: 400; color: #a8a8b3; }
+        .controls {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            background-color: #323238;
+            color: #00f0ff;
+            border: 1px solid #00f0ff55;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background-color: #00f0ff22;
+            border-color: #00f0ff;
+        }
+        canvas {
+            background-color: #1a1a1e;
+            border: 1px solid #29292e;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .stats {
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #00f0ff;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>From Remote Server to Silicon Cache</h2>
+    <div class="controls">
+        <button onclick="startJourney('cache')">Run Loop: Fast Cache Access</button>
+        <button onclick="startJourney('ram')">Run Loop: Slow RAM Miss</button>
+    </div>
+
+    <canvas id="simCanvas" width="950" height="420"></canvas>
+    <div class="stats" id="statsDisplay">Click a button to fetch web data and run the loop.</div>
+
+<script>
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+const statsDisplay = document.getElementById('statsDisplay');
+
+// Zones
+const serverZone = { x: 30, y: 120, w: 140, h: 200, label: "1. REMOTE SERVER" };
+const internetZone = { x: 190, y: 120, w: 100, h: 200, label: "2. INTERNET" };
+const ramZone = { x: 310, y: 120, w: 240, h: 200, label: "3. LOCAL RAM WAREHOUSE" };
+const cacheZone = { x: 570, y: 120, w: 140, h: 200, label: "4. CPU CACHE" };
+const cpuZone = { x: 730, y: 120, w: 190, h: 200, label: "5. PROCESSOR (BERRY)" };
+
+// Berry state
+let berry = {
+    x: 825, // Inside CPU
+    y: 220,
+    targetX: 825,
+    sourceType: 'CACHE',
+    active: false
+};
+
+let waveAngle = 0;
+let statusText = "System ready. Choose a path.";
+let latencyCost = 0;
+
+function startJourney(type) {
+    berry.sourceType = type;
+    berry.active = true;
+    
+    if (type === 'cache') {
+        berry.x = 640; // Starts in cache
+        berry.targetX = 825;
+        latencyCost = 1;
+        statusText = "Fast path: Data fetched straight from local Cache tray into CPU.";
+    } else {
+        berry.x = 430; // Starts in RAM
+        berry.targetX = 825;
+        latencyCost = 80;
+        statusText = "Slow path: Cache miss! Had to drag data all the way from RAM.";
+    }
+}
+
+function update() {
+    if (berry.active) {
+        let dx = berry.targetX - berry.x;
+        berry.x += dx * 0.1;
+        if (Math.abs(dx) < 1) {
+            berry.x = berry.targetX;
+        }
+    }
+    waveAngle += 0.12;
+}
+
+function drawZone(z, color) {
+    ctx.strokeStyle = color + '55';
+    ctx.fillStyle = color + '08';
+    ctx.fillRect(z.x, z.y, z.w, z.h);
+    ctx.strokeRect(z.x, z.y, z.w, z.h);
+    
+    ctx.fillStyle = color;
+    ctx.font = '11px monospace';
+    ctx.fillText(z.label, z.x + 10, z.y + 22);
+}
+
+function drawBerry(x, y) {
+    let renderY = y + Math.sin(waveAngle) * 6;
+
+    // Body
+    ctx.fillStyle = '#9b5de5';
+    ctx.beginPath();
+    ctx.arc(x, renderY, 15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#c77dff';
+    ctx.stroke();
+
+    // Stem
+    ctx.strokeStyle = '#52b788';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x, renderY - 15);
+    ctx.quadraticCurveTo(x + 6, renderY - 24, x + 12, renderY - 20);
+    ctx.stroke();
+
+    // Face
+    ctx.fillStyle = '#121214';
+    ctx.beginPath();
+    ctx.arc(x - 4, renderY - 2, 2, 0, Math.PI * 2);
+    ctx.arc(x + 4, renderY - 2, 2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.arc(x, renderY + 4, 4, 0, Math.PI);
+    ctx.stroke();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw all architectural boundaries
+    drawZone(serverZone, '#ffaa00');
+    drawZone(internetZone, '#00ffaa');
+    drawZone(ramZone, '#ff0055');
+    drawZone(cacheZone, '#00f0ff');
+    drawZone(cpuZone, '#bd00ff');
+
+    // Draw static connection pipes / arrows text
+    ctx.fillStyle = '#55555d';
+    ctx.font = '16px monospace';
+    ctx.fillText("→", 172, 225);
+    ctx.fillText("→", 293, 225);
+    ctx.fillText("→", 553, 225);
+    ctx.fillText("→", 713, 225);
+
+    // Draw server asset representation
+    ctx.fillStyle = '#ffaa0055';
+    ctx.fillRect(serverZone.x + 30, serverZone.y + 60, 80, 100);
+    ctx.fillStyle = '#ffaa00';
+    ctx.font = '10px monospace';
+    ctx.fillText("Cloud Code", serverZone.x + 38, serverZone.y + 110);
+
+    // Draw the moving berry
+    drawBerry(berry.x, berry.y);
+
+    // Status output
+    statsDisplay.innerHTML = `${statusText} | Latency: <span style="color:${berry.sourceType === 'CACHE' ? '#00f0ff' : '#ff0055'}">${latencyCost} ns</span>`;
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>
