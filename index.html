@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Bouncing Berry Memory Simulator</title>
+    <style>
+        body {
+            background-color: #121214;
+            color: #e1e1e6;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        h2 { margin: 5px 0; font-weight: 400; color: #a8a8b3; }
+        .controls {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            background-color: #323238;
+            color: #00f0ff;
+            border: 1px solid #00f0ff55;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background-color: #00f0ff22;
+            border-color: #00f0ff;
+        }
+        canvas {
+            background-color: #1a1a1e;
+            border: 1px ssolid #29292e;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .stats {
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #00f0ff;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>The Bouncing Berry Memory Journey</h2>
+    <div class="controls">
+        <button onclick="setMode('contiguous')">Mode: Contiguous Array (Fast Stream)</button>
+        <button onclick="setMode('scattered')">Mode: Scattered Pointers (RAM Trap)</button>
+    </div>
+
+    <canvas id="simCanvas" width="800" height="400"></canvas>
+    <div class="stats" id="statsDisplay">Status: Ready. Select a mode above.</div>
+
+<script>
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+const statsDisplay = document.getElementById('statsDisplay');
+
+let mode = 'none'; // 'contiguous' or 'scattered'
+let steps = 0;
+let totalTime = 0;
+let message = "Choose a memory pattern to start the berry.";
+
+// Berry position and wave physics
+let berryX = 150;
+let berryY = 250;
+let targetX = 150;
+let targetY = 250;
+let waveAngle = 0;
+let isMoving = false;
+let currentBlockType = 'CACHE'; // CACHE or RAM
+
+// Memory Layout Boxes
+const cacheBox = { x: 50, y: 180, w: 180, h: 140, label: "L1/L2 CACHE (The Tray)" };
+const ramBox = { x: 350, y: 80, w: 400, h: 280, label: "RAM WAREHOUSE (Far Away)" };
+
+// Grid of items inside RAM & Cache
+let ramCells = [];
+for (let i = 0; i < 24; i++) {
+    ramCells.push({
+        id: i,
+        x: ramBox.x + 20 + (i % 8) * 45,
+        y: ramBox.y + 40 + Math.floor(i / 8) * 70,
+        active: false,
+        inCache: i < 6 // First 6 are preloaded in cache tray
+    });
+}
+
+function setMode(newMode) {
+    mode = newMode;
+    steps = 0;
+    totalTime = 0;
+    isMoving = true;
+    pickNextTarget();
+}
+
+function pickNextTarget() {
+    if (steps >= 12) {
+        isMoving = false;
+        message = `Finished! Total Time penalty: ${totalTime}ms (Lower is faster)`;
+        return;
+    }
+    
+    // In contiguous mode, berry picks sequential cells. In scattered, it jumps randomly.
+    let targetId;
+    if (mode === 'contiguous') {
+        targetId = steps % ramCells.length;
+    } else {
+        // Random jumps simulating pointer-chasing
+        targetId = Math.floor(Math.random() * ramCells.length);
+    }
+    
+    let cell = ramCells[targetId];
+    targetX = cell.x + 15;
+    targetY = cell.y + 15;
+    
+    // Check if it's in the cache tray or requires a RAM trip
+    if (cell.inCache && mode === 'contiguous') {
+        currentBlockType = 'CACHE';
+        totalTime += 1; // 1 nanosecond
+    } else {
+        currentBlockType = 'RAM';
+        totalTime += 80; // 80 nanosecond penalty for RAM miss
+    }
+    
+    steps++;
+}
+
+// Animation loop
+function update() {
+    if (isMoving) {
+        // Smooth glide toward target
+        let dx = targetX - berryX;
+        let dy = targetY - berryY;
+        berryX += dx * 0.1;
+        berryY += dy * 0.1;
+        
+        // If close enough, pick next
+        if (Math.abs(dx) < 2 && Math.abs(dy) < 2) {
+            pickNextTarget();
+        }
+    }
+    
+    waveAngle += 0.15; // Wave oscillation speed
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Cache Tray Area
+    ctx.strokeStyle = '#00f0ff33';
+    ctx.fillStyle = '#00f0ff0a';
+    ctx.fillRect(cacheBox.x, cacheBox.y, cacheBox.w, cacheBox.h);
+    ctx.strokeRect(cacheBox.x, cacheBox.y, cacheBox.w, cacheBox.h);
+    ctx.fillStyle = '#00f0ff';
+    ctx.font = '12px monospace';
+    ctx.fillText(cacheBox.label, cacheBox.x + 10, cacheBox.y + 25);
+
+    // Draw RAM Warehouse Area
+    ctx.strokeStyle = '#ff005533';
+    ctx.fillStyle = '#ff00550a';
+    ctx.fillRect(ramBox.x, ramBox.y, ramBox.w, ramBox.h);
+    ctx.strokeRect(ramBox.x, ramBox.y, ramBox.w, ramBox.h);
+    ctx.fillStyle = '#ff0055';
+    ctx.fillText(ramBox.label, ramBox.x + 20, ramBox.y + 25);
+
+    // Draw memory cells
+    ramCells.forEach((cell, idx) => {
+        let isInsideCache = cell.x < (cacheBox.x + cacheBox.w);
+        ctx.fillStyle = isInsideCache ? '#00f0ff22' : '#ff005522';
+        ctx.strokeStyle = isInsideCache ? '#00f0ff' : '#ff0055';
+        ctx.fillRect(cell.x, cell.y, 35, 45);
+        ctx.strokeRect(cell.x, cell.y, 35, 45);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '10px monospace';
+        ctx.fillText(`b${idx}`, cell.x + 6, cell.y + 26);
+    });
+
+    // Draw Bouncing Berry (Particle + Wave motion)
+    let waveOffset = Math.sin(waveAngle) * 6; // The wave bounce up and down
+    let renderY = berryY + waveOffset;
+
+    // Berry Body (Purple)
+    ctx.fillStyle = '#9b5de5';
+    ctx.beginPath();
+    ctx.arc(berryX, renderY, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#c77dff';
+    ctx.stroke();
+
+    // Berry Stem & Leaf
+    ctx.strokeStyle = '#52b788';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(berryX, renderY - 14);
+    ctx.quadraticCurveTo(berryX + 8, renderY - 24, berryX + 14, renderY - 20);
+    ctx.stroke();
+
+    // Cute Eyes & Mouth
+    ctx.fillStyle = '#121214';
+    ctx.beginPath();
+    ctx.arc(berryX - 4, renderY - 2, 2, 0, Math.PI * 2);
+    ctx.arc(berryX + 4, renderY - 2, 2, 0, Math.PI * 2);
+    ctx.fill();
+    // Happy small arc mouth
+    ctx.beginPath();
+    ctx.arc(berryX, renderY + 3, 4, 0, Math.PI);
+    ctx.stroke();
+
+    // Update stats text
+    if (mode !== 'none') {
+        statsDisplay.innerHTML = `Mode: ${mode.toUpperCase()} | Current Fetch: <span style="color:${currentBlockType === 'CACHE' ? '#00f0ff' : '#ff0055'}">${currentBlockType}</span> | Elapsed Latency: ${totalTime} ns`;
+    } else {
+        statsDisplay.innerHTML = message;
+    }
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>
