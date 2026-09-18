@@ -62,6 +62,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+        }
+
+        .viewport-frame iframe {
+            width: 800px;  /* Matches the internal canvas width */
+            height: 400px; /* Matches the internal canvas height */
+            border: none;
+            /* Automatically scales the fixed-width canvas to fit the mobile frame */
+            transform: scale(0.48); 
+            transform-origin: center;
         }
 
         iframe {
@@ -121,6 +131,13 @@
             cursor: not-allowed;
         }
 
+        /* On wider desktop screens, scale it back up to normal size */
+        @media (min-width: 600px) {
+            .viewport-frame iframe {
+                transform: scale(0.85);
+            }
+        }
+
         /* Desktop Layout Override: Flanked Wings */
         @media (min-width: 900px) {
             .console-container {
@@ -132,6 +149,11 @@
                 height: 100%;
                 max-height: 700px;
             }
+
+            .viewport-frame iframe {
+                transform: scale(1);
+            }
+            
             .control-panel {
                 flex: 1;
                 height: 100%;
