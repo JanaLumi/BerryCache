@@ -53,7 +53,7 @@
 
     .viewport-frame {
         width: 100%;
-        aspect-ratio: 2 / 1; /* Automatically maintains a clean 800x400 proportional window */
+        aspect-ratio: 1.5 / 1; /* Automatically maintains a clean 800x400 proportional window */
         background: var(--panel-bg);
         border: 1px solid var(--border-color);
         border-radius: 12px;
@@ -203,6 +203,13 @@ function updateCommandContext(file) {
     }
 }
 
+function sendAction(actionType) {
+    const iframeWindow = document.getElementById('simFrame').contentWindow;
+    if (iframeWindow && typeof iframeWindow.handleConsoleCommand === 'function') {
+        iframeWindow.handleConsoleCommand(actionType);
+    }
+}
+
 function updateScale() {
     const frame = document.querySelector('.viewport-frame');
     const iframe = document.getElementById('simFrame');
@@ -213,14 +220,7 @@ function updateScale() {
         frame.style.height = (400 * scale) + 'px'; // Scale container height proportionally
     }
 }
-
-function sendAction(actionType) {
-    const iframeWindow = document.getElementById('simFrame').contentWindow;
-    if (iframeWindow && typeof iframeWindow.handleConsoleCommand === 'function') {
-        iframeWindow.handleConsoleCommand(actionType);
-    }
-}
-
+    
 window.addEventListener('resize', updateScale);
 window.addEventListener('DOMContentLoaded', updateScale);
 </script>
