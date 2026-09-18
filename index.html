@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber-Berry Terminal</title>
+    <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --panel-bg: #141419;
+            --border-color: #2a2a35;
+            --accent-glow: #00f0ff;
+            --accent-dim: #00f0ff33;
+            --text-main: #e1e1e6;
+            --text-muted: #888892;
+            --disabled-bg: #1a1a22;
+            --disabled-text: #44444f;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        header {
+            text-align: center;
+            padding: 8px 0;
+            font-family: monospace;
+            font-size: 13px;
+            letter-spacing: 2px;
+            color: var(--accent-glow);
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 10px;
+        }
+
+        /* Mobile-First Layout: Stacked Top/Bottom */
+        .console-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .viewport-frame {
+            flex: 2;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .control-panel {
+            flex: 1;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .panel-section-title {
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        button {
+            background-color: #1f1f28;
+            color: var(--accent-glow);
+            border: 1px solid var(--accent-dim);
+            padding: 14px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: var(--accent-dim);
+            border-color: var(--accent-glow);
+        }
+
+        button:disabled {
+            background-color: var(--disabled-bg);
+            color: var(--disabled-text);
+            border-color: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        /* Desktop Layout Override: Flanked Wings */
+        @media (min-width: 900px) {
+            .console-container {
+                flex-direction: row;
+                align-items: center;
+            }
+            .viewport-frame {
+                flex: 3;
+                height: 100%;
+                max-height: 700px;
+            }
+            .control-panel {
+                flex: 1;
+                height: 100%;
+                max-height: 700px;
+            }
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>// CYBER-BERRY SYSTEM TELEMETRY V1.0 // ACTIVE_MODULE: <span id="activeModuleLabel">berry_1.html</span></header>
+
+    <div class="console-container">
+        <!-- Main Interactive Viewport -->
+        <div class="viewport-frame">
+            <iframe id="simFrame" src="berry_1.html"></iframe>
+        </div>
+
+        <!-- Touch / Click Command Panel -->
+        <div class="control-panel">
+            <div class="panel-section-title">Module Select</div>
+            <div class="button-grid">
+                <button onclick="loadModule('berry_1.html', this)" id="btn-m1">M1: Cache vs RAM</button>
+                <button onclick="loadModule('berry_2.html', this)" id="btn-m2">M2: Access Patterns</button>
+                <button onclick="loadModule('berry_3.html', this)" id="btn-m3" style="grid-column: span 2;">M3: Web-to-Silicon Pipeline</button>
+            </div>
+
+            <div class="panel-section-title" style="margin-top: 10px;">Context Telemetry Controls</div>
+            <div class="button-grid" id="moduleCommands">
+                <button onclick="sendAction('cache')" id="cmd-cache">Access Cache</button>
+                <button onclick="sendAction('ram')" id="cmd-ram">Access RAM</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+function loadModule(file, btnElement) {
+    document.getElementById('simFrame').src = file;
+    document.getElementById('activeModuleLabel').innerText = file;
+    updateCommandContext(file);
+}
+
+function updateCommandContext(file) {
+    const cmdCache = document.getElementById('cmd-cache');
+    const cmdRam = document.getElementById('cmd-ram');
+
+    if (file === 'berry_1.html' || file === 'berry_3.html') {
+        cmdCache.disabled = false;
+        cmdRam.disabled = false;
+    } else if (file === 'berry_2.html') {
+        // Module 2 handles its own mode switching internally via its layout buttons, 
+        // so we can adapt these console triggers accordingly.
+        cmdCache.disabled = true;
+        cmdRam.disabled = true;
+    }
+}
+
+function sendAction(actionType) {
+    const iframeWindow = document.getElementById('simFrame').contentWindow;
+    if (iframeWindow && typeof iframeWindow.handleConsoleCommand === 'function') {
+        iframeWindow.handleConsoleCommand(actionType);
+    }
+}
+</script>
+
+</body>
+</html>
