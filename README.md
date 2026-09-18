@@ -12,7 +12,7 @@ The Threat Landscape in the Age of AI
 Web security today is rarely just about traditional hacking. It is about scale. Automated agents continuously probe, scrape, and recontextualize open information without consent or context.
 
 **In this environment**:
- * Centralisation is a single point of failure: Relying on hosted platforms means your community's archive is subject to arbitrary policy changes, monetization, or sudden disappearance.
+ * Centralisation is a single point of failure: Relying on hosted platforms means your community's archive is subject to arbitrary policy changes, monetisation, or sudden disappearance.
  * Legacy neglect is an open door: Abandoned hardware and unbacked-up local data are easy targets for automated exploitation and permanent loss.
 
 **The Counter-Weight**: Local Sovereignty
