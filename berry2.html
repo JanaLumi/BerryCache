@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Berry in the Cache Tray</title>
+    <style>
+        body {
+            background-color: #121214;
+            color: #e1e1e6;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        h2 { margin: 5px 0; font-weight: 400; color: #a8a8b3; }
+        .controls {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            background-color: #323238;
+            color: #00f0ff;
+            border: 1px solid #00f0ff55;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background-color: #00f0ff22;
+            border-color: #00f0ff;
+        }
+        canvas {
+            background-color: #1a1a1e;
+            border: 1px solid #29292e;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .stats {
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #00f0ff;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Where is the Berry? (Cache vs. RAM)</h2>
+    <div class="controls">
+        <button onclick="requestBerry('cache')">Access Berry in Cache (Fast)</button>
+        <button onclick="requestBerry('ram')">Access Berry in RAM (Slow Cache Miss)</button>
+    </div>
+
+    <canvas id="simCanvas" width="800" height="400"></canvas>
+    <div class="stats" id="statsDisplay">Click a button above to fetch the berry.</div>
+
+<script>
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+const statsDisplay = document.getElementById('statsDisplay');
+
+// Berry visual properties (it bounces/floats gently like a particle-wave)
+let berry = {
+    x: 140, // Starts safely inside the cache tray
+    y: 200,
+    targetX: 140,
+    targetY: 200,
+    location: 'CACHE', // 'CACHE' or 'RAM'
+    latency: 1
+};
+
+let waveAngle = 0;
+let isFetching = false;
+let statusText = "The berry is cozy in your L1 Cache tray. Ready.";
+
+function requestBerry(where) {
+    isFetching = true;
+    if (where === 'cache') {
+        berry.targetX = 140; // Cache tray coordinates
+        berry.targetY = 200;
+        berry.location = 'CACHE';
+        berry.latency = 1; // 1 nanosecond
+        statusText = "Cache Hit! Instant access from the local tray.";
+    } else {
+        berry.targetX = 580; // Far away RAM warehouse coordinates
+        berry.targetY = 200;
+        berry.location = 'RAM';
+        berry.latency = 80; // 80 nanosecond penalty
+        statusText = "Cache Miss! Had to walk all the way to the RAM warehouse!";
+    }
+}
+
+function update() {
+    // Smooth glide toward target
+    let dx = berry.targetX - berry.x;
+    berry.x += dx * 0.1;
+
+    waveAngle += 0.1; // Gentle wave bobbing
+}
+
+function drawBerry(x, y, isBouncing) {
+    let renderY = y + Math.sin(waveAngle) * 5;
+
+    // Berry Body (Purple)
+    ctx.fillStyle = '#9b5de5';
+    ctx.beginPath();
+    ctx.arc(x, renderY, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#c77dff';
+    ctx.stroke();
+
+    // Stem & Leaf
+    ctx.strokeStyle = '#52b788';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, renderY - 18);
+    ctx.quadraticCurveTo(x + 8, renderY - 28, x + 16, renderY - 24);
+    ctx.stroke();
+
+    // Cute Eyes & Mouth
+    ctx.fillStyle = '#121214';
+    ctx.beginPath();
+    ctx.arc(x - 5, renderY - 3, 2.5, 0, Math.PI * 2);
+    ctx.arc(x + 5, renderY - 3, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.arc(x, renderY + 4, 5, 0, Math.PI);
+    ctx.stroke();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1. Draw Cache Tray Box (Left)
+    ctx.strokeStyle = '#00f0ff55';
+    ctx.fillStyle = '#00f0ff08';
+    ctx.fillRect(50, 100, 180, 220);
+    ctx.strokeRect(50, 100, 180, 220);
+    
+    ctx.fillStyle = '#00f0ff';
+    ctx.font = '13px monospace';
+    ctx.fillText("CPU CACHE TRAY", 70, 130);
+    ctx.font = '11px sans-serif';
+    ctx.fillStyle = '#a8a8b3';
+    ctx.fillText("(Right next to your hand)", 70, 150);
+
+    // 2. Draw RAM Warehouse Box (Right)
+    ctx.strokeStyle = '#ff005555';
+    ctx.fillStyle = '#ff005508';
+    ctx.fillRect(450, 100, 300, 220);
+    ctx.strokeRect(450, 100, 300, 220);
+    
+    ctx.fillStyle = '#ff0055';
+    ctx.font = '13px monospace';
+    ctx.fillText("RAM WAREHOUSE", 480, 130);
+    ctx.font = '11px sans-serif';
+    ctx.fillStyle = '#a8a8b3';
+    ctx.fillText("(Far away across the room)", 480, 150);
+
+    // Draw the Berry itself at its current coordinate
+    drawBerry(berry.x, berry.y);
+
+    // Update bottom status display
+    statsDisplay.innerHTML = `${statusText} | Latency Cost: <span style="color:${berry.location === 'CACHE' ? '#00f0ff' : '#ff0055'}">${berry.latency} ns</span>`;
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>
