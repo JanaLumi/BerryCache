@@ -4,12 +4,12 @@
 
 ## The Architecture of Digital Resistance
 
-We live in an era where automated systems and AI scrapers vacuum up digital history by the terabyte, centralizing knowledge while letting local infrastructure rot. When a community’s data is left on unmaintained legacy hardware or tied to extractive cloud services, it becomes vulnerable to both systemic neglect and algorithmic extraction.
+We live in an era where automated systems and AI scrapers vacuum up digital history by the terabyte, centralising knowledge while letting local infrastructure rot. When a community’s data is left on unmaintained legacy hardware or tied to extractive cloud services, it becomes vulnerable to both systemic neglect and algorithmic extraction.
 
 This repository isn’t just a collection of files or a technical fix; it is an exercise in digital self-defense. It represents the work of pulling historical knowledge out of proprietary traps (like aging Windows machines) and anchoring it back into local, human-scale hands.
 
 The Threat Landscape in the Age of AI
-Web security today is rarely just about traditional hacking. It is about scale. Automated agents continuously probe, scrape, and recontextualize open information without consent or context.
+Web security today is rarely just about traditional hacking. It is about scale. Automated agents continuously probe, scrape, and recontextualise open information without consent or context.
 
 **In this environment**:
  * Centralisation is a single point of failure: Relying on hosted platforms means your community's archive is subject to arbitrary policy changes, monetisation, or sudden disappearance.
